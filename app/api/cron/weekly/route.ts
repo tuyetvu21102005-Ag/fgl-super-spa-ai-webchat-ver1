@@ -1,7 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import { sendTelegramMessage } from '@/lib/telegram';
 
-export const runtime = 'edge';
+// export const runtime = 'edge';
 
 export async function GET(req: Request) {
   // Xác thực Cron Secret (Bảo mật)

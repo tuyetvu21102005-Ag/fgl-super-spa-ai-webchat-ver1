@@ -10,7 +10,7 @@ const openai = new OpenAI({
   baseURL: 'https://api.deepseek.com/v1',
 });
 
-export const runtime = 'edge';
+// export const runtime = 'edge'; // Disabled for googleapis compatibility
 
 export async function POST(req: Request) {
   try {
