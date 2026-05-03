@@ -25,7 +25,7 @@
 
 ## Phase 5: Polish & Deployment (In Progress)
 - [x] Final testing and debugging.
-- [/] Deploy to Vercel (Fixing deploy errors).
+- [x] Deploy to Vercel (Pushed to GitHub).
 - [x] Set up Vercel Cron jobs for reminders (Pro prep).
 
 **Total Estimated Time**: 28 hours
