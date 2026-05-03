@@ -10,10 +10,17 @@ export default function InventoryManager() {
   const [newItem, setNewItem] = useState({ name: '', quantity: 0, price: 0 });
 
   const fetchInventory = async () => {
-    setLoading(true);
-    const { data } = await supabase.from('inventory').select('*').order('product_name');
-    setItems(data || []);
-    setLoading(false);
+    if (!supabase) return;
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.from('inventory').select('*').order('product_name');
+      if (error) console.error('Inventory error:', error);
+      setItems(data || []);
+    } catch (err) {
+      console.error('Inventory fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -22,7 +29,7 @@ export default function InventoryManager() {
 
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newItem.name) return;
+    if (!newItem.name || !supabase) return;
 
     await supabase.from('inventory').insert({
       spa_id: 'default',
@@ -36,6 +43,7 @@ export default function InventoryManager() {
   };
 
   const updateQuantity = async (id: string, newQuantity: number) => {
+    if (!supabase) return;
     await supabase.from('inventory').update({ quantity: newQuantity }).eq('id', id);
     fetchInventory(); // Hoặc cập nhật state cục bộ cho nhanh
   };

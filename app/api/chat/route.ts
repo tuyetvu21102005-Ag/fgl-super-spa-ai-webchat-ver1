@@ -12,9 +12,47 @@ const openai = new OpenAI({
 
 // export const runtime = 'edge'; // Disabled for googleapis compatibility
 
+interface ChatRequest {
+  messages: any[];
+  sessionId: string;
+  spaId: string;
+  spaName: string;
+  serviceList: string;
+  priceList: string;
+  address: string;
+  hours: string;
+}
+
+interface AIOutput {
+  intent: string;
+  lead_score: number;
+  lead_temperature: 'cold' | 'warm' | 'hot';
+  pain_points: string[];
+  competitor_mentions: string[];
+  channel_source: string;
+  extracted_data: {
+    name: string | null;
+    phone: string | null;
+    service: string | null;
+    datetime: string | null;
+  };
+  action_required: {
+    save_to_sheets: boolean;
+    send_telegram: boolean;
+    create_booking: boolean;
+    update_booking: boolean;
+    cancel_booking: boolean;
+    check_loyalty: boolean;
+    generate_payment: boolean;
+    schedule_followup: boolean;
+  };
+  telegram_message: string;
+  insight_flag: string;
+}
+
 export async function POST(req: Request) {
   try {
-    const { messages, sessionId, spaId, spaName, serviceList, priceList, address, hours } = await req.json();
+    const { messages, sessionId, spaId, spaName, serviceList, priceList, address, hours }: ChatRequest = await req.json();
 
     // 0. Save user message if sessionId is present
     if (sessionId && messages.length > 0) {
@@ -80,6 +118,7 @@ Tính cách: tinh tế, thấu cảm, chuyên nghiệp, nói tiếng Việt tự
   - Không bao giờ trả lời quá 3 câu trong 1 lượt.
   - Sử dụng các từ ngữ thân mật nhưng lịch sự: "Dạ", "Chị ạ", "Mình ơi".
   - Luôn hướng tới mục tiêu cuối cùng: Đặt lịch tư vấn trực tiếp (Booking).
+  - Khi khách muốn đặt lịch (intent: booking) nhưng chưa có ngày giờ, hãy khuyến khích khách chọn thời gian bằng bộ chọn lịch trực quan sẽ hiện ra bên dưới.
   - VIETQR: Nếu khách muốn đặt cọc hoặc thanh toán, hãy tạo link: https://img.vietqr.io/image/MB-0901234567-compact2.png?amount=100000&addInfo=DAT%20LICH%20[TEN_KHACH]
   - LOYALTY: Nếu khách hỏi điểm thành viên, hãy xin SĐT để tra cứu và báo họ số điểm hiện có (mặc định là 0 nếu chưa có lịch sử).
 
@@ -136,12 +175,14 @@ Tính cách: tinh tế, thấu cảm, chuyên nghiệp, nói tiếng Việt tự
       onCompletion: async (completion) => {
         // Parse JSON block for webhook
         const jsonMatch = completion.match(/---JSON_OUTPUT---([\s\S]*?)---END_JSON---/);
-        let jsonData = null;
+        let jsonData: AIOutput | null = null;
         if (jsonMatch) {
           try {
             jsonData = JSON.parse(jsonMatch[1].trim());
             console.log('Extracted JSON:', jsonData);
             
+            if (!jsonData) return;
+
             // Trigger Telegram if required
             if (jsonData.action_required?.send_telegram && jsonData.telegram_message) {
               await sendTelegramMessage(jsonData.telegram_message);

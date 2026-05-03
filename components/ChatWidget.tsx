@@ -1,14 +1,16 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, User, Bot, Loader2, Sparkles, MapPin, Clock, Phone, ChevronRight } from 'lucide-react';
+import { MessageCircle, X, Send, Bot, Sparkles, MapPin, Clock, Phone } from 'lucide-react';
 import { useChat } from 'ai/react';
 import { motion, AnimatePresence } from 'framer-motion';
+import BookingSelector from './BookingSelector';
 
 export default function ChatWidget({ isEmbed = false }: { isEmbed?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [showBookingSelector, setShowBookingSelector] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -29,7 +31,7 @@ export default function ChatWidget({ isEmbed = false }: { isEmbed?: boolean }) {
     setSessionId(storedSessionId);
   }, []);
 
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, isLoading, append } = useChat({
     api: '/api/chat',
     body: {
       sessionId,
@@ -49,6 +51,26 @@ export default function ChatWidget({ isEmbed = false }: { isEmbed?: boolean }) {
     ],
   });
 
+  // Effect to check for booking intent and show selector
+  useEffect(() => {
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage?.role === 'assistant' && !isLoading) {
+      const jsonMatch = lastMessage.content.match(/---JSON_OUTPUT---([\s\S]*?)---END_JSON---/);
+      if (jsonMatch) {
+        try {
+          const jsonData = JSON.parse(jsonMatch[1].trim());
+          if (jsonData.intent === 'booking' && !jsonData.extracted_data?.datetime) {
+            setShowBookingSelector(true);
+          } else {
+            setShowBookingSelector(false);
+          }
+        } catch (e) {
+          console.error('Error parsing JSON from message:', e);
+        }
+      }
+    }
+  }, [messages, isLoading]);
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({
@@ -56,7 +78,7 @@ export default function ChatWidget({ isEmbed = false }: { isEmbed?: boolean }) {
         behavior: 'smooth'
       });
     }
-  }, [messages]);
+  }, [messages, showBookingSelector]);
 
   const quickActions = [
     { label: 'Đặt lịch ngay', message: 'Tôi muốn đặt lịch tư vấn' },
@@ -65,16 +87,20 @@ export default function ChatWidget({ isEmbed = false }: { isEmbed?: boolean }) {
   ];
 
   const handleQuickAction = (message: string) => {
-    handleInputChange({ target: { value: message } } as any);
-    // Note: We don't submit immediately to let user see the text, 
-    // or we can submit it directly if we want.
-    // Let's just submit it.
-    const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
+    // We can just call setInput if useChat provides it, but handleInputChange works too
+    handleInputChange({ target: { value: message } } as React.ChangeEvent<HTMLInputElement>);
     setTimeout(() => {
-      // Small delay to ensure state update
       const form = document.querySelector('form') as HTMLFormElement;
       if (form) form.requestSubmit();
     }, 50);
+  };
+
+  const handleBookingSelect = (datetime: string) => {
+    setShowBookingSelector(false);
+    append({
+      role: 'user',
+      content: `Tôi chọn thời gian: ${datetime}. Vui lòng xác nhận lịch hẹn này cho tôi.`,
+    });
   };
 
   return (
@@ -168,8 +194,19 @@ export default function ChatWidget({ isEmbed = false }: { isEmbed?: boolean }) {
                 );
               })}
               
+              {/* Custom Component: Booking Selector */}
+              {showBookingSelector && !isLoading && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="w-full"
+                >
+                  <BookingSelector onSelect={handleBookingSelect} />
+                </motion.div>
+              )}
+
               {/* Quick Actions for Assistant */}
-              {messages[messages.length - 1]?.role === 'assistant' && !isLoading && (
+              {messages[messages.length - 1]?.role === 'assistant' && !isLoading && !showBookingSelector && (
                 <div className="flex flex-wrap gap-2 pt-2">
                   {quickActions.map((action, i) => (
                     <button
@@ -288,3 +325,4 @@ export default function ChatWidget({ isEmbed = false }: { isEmbed?: boolean }) {
     </div>
   );
 }
+

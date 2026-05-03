@@ -1,4 +1,5 @@
 import ChatWidget from '@/components/ChatWidget';
+import Link from 'next/link';
 import { Sparkles, Calendar, Heart, ShieldCheck } from 'lucide-react';
 
 export default function Home() {
@@ -27,12 +28,12 @@ export default function Home() {
             <button className="bg-rose-500 hover:bg-rose-600 text-white px-10 py-4 rounded-2xl font-bold text-lg shadow-xl shadow-rose-500/25 transition-all active:scale-95">
               Đặt lịch ngay
             </button>
-            <a 
+            <Link 
               href="/admin" 
               className="bg-white border-2 border-gray-100 hover:border-rose-200 text-gray-700 px-10 py-4 rounded-2xl font-bold text-lg transition-all active:scale-95 flex items-center justify-center"
             >
               Quản lý Lead (Admin)
-            </a>
+            </Link>
           </div>
         </div>
 

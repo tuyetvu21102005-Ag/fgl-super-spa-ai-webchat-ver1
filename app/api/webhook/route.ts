@@ -27,7 +27,7 @@ function formatTelegramMessage(data: any): string {
 export async function POST(req: Request) {
   try {
     const data = await req.json();
-    const { action_required, extracted_data, spa_id = 'default_spa' } = data;
+    const { action_required, spa_id = 'default_spa' } = data;
 
     const results = await Promise.allSettled([
       // 1. Sync to Supabase

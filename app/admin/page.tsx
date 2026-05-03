@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Users, Calendar, TrendingUp, RefreshCcw, Code } from 'lucide-react';
+import { Users, Calendar, TrendingUp, RefreshCcw } from 'lucide-react';
 import EmbedSnippet from '@/components/EmbedSnippet';
 import ContentGenerator from '@/components/ContentGenerator';
 import InventoryManager from '@/components/InventoryManager';
@@ -13,13 +13,27 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
-    setLoading(true);
-    const { data: leadsData } = await supabase.from('leads').select('*').order('created_at', { ascending: false });
-    const { data: bookingsData } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
-    
-    setLeads(leadsData || []);
-    setBookings(bookingsData || []);
-    setLoading(false);
+    if (!supabase) {
+      console.warn('Supabase client not initialized. Check your environment variables.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { data: leadsData, error: leadsError } = await supabase.from('leads').select('*').order('created_at', { ascending: false });
+      const { data: bookingsData, error: bookingsError } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
+      
+      if (leadsError) console.error('Error fetching leads:', leadsError);
+      if (bookingsError) console.error('Error fetching bookings:', bookingsError);
+
+      setLeads(leadsData || []);
+      setBookings(bookingsData || []);
+    } catch (err) {
+      console.error('Fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
