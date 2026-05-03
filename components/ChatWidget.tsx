@@ -6,7 +6,21 @@ import { useChat } from 'ai/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import BookingSelector from './BookingSelector';
 
-export default function ChatWidget({ isEmbed = false }: { isEmbed?: boolean }) {
+export default function ChatWidget({ 
+  isEmbed = false,
+  spaName = 'An Spa',
+  spaId = 'an-spa-01',
+  address = 'Địa chỉ Spa',
+  hours = '9:00 - 21:00',
+  phone = '090.123.4567'
+}: { 
+  isEmbed?: boolean;
+  spaName?: string;
+  spaId?: string;
+  address?: string;
+  hours?: string;
+  phone?: string;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -35,10 +49,10 @@ export default function ChatWidget({ isEmbed = false }: { isEmbed?: boolean }) {
     api: '/api/chat',
     body: {
       sessionId,
-      spaId: 'glow-beauty-01',
-      spaName: 'Glow Beauty Spa',
-      address: '123 Đường ABC, Quận 1, TP.HCM',
-      hours: '9:00 - 21:00 hằng ngày',
+      spaId,
+      spaName,
+      address,
+      hours,
       serviceList: 'Chăm sóc da chuyên sâu, Massage body đá nóng, Triệt lông vĩnh viễn, Gội đầu dưỡng sinh thảo dược',
       priceList: 'Chăm sóc da: 500k, Massage: 400k, Gội đầu: 200k'
     },
@@ -46,7 +60,7 @@ export default function ChatWidget({ isEmbed = false }: { isEmbed?: boolean }) {
       {
         id: 'welcome',
         role: 'assistant',
-        content: 'Chào bạn! Mình là trợ lý AI của Glow Beauty Spa. Mình có thể giúp gì cho bạn hôm nay? ✨',
+        content: `Chào bạn! Mình là trợ lý AI của ${spaName}. Mình có thể giúp gì cho bạn hôm nay? ✨`,
       },
     ],
   });
@@ -130,7 +144,7 @@ export default function ChatWidget({ isEmbed = false }: { isEmbed?: boolean }) {
                     <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 border-2 border-rose-600 rounded-full"></div>
                   </div>
                   <div>
-                    <h3 className="font-bold text-xl tracking-tight leading-tight">Glow Beauty AI</h3>
+                    <h3 className="font-bold text-xl tracking-tight leading-tight">{spaName} AI</h3>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full uppercase font-bold tracking-wider">Online</span>
                       <p className="text-xs text-rose-100/80">Chuyên gia tư vấn</p>
@@ -150,15 +164,15 @@ export default function ChatWidget({ isEmbed = false }: { isEmbed?: boolean }) {
             <div className="bg-rose-50/50 px-6 py-2 flex items-center gap-4 border-b border-rose-100/50 overflow-x-auto no-scrollbar">
               <div className="flex items-center gap-1.5 whitespace-nowrap text-[11px] text-rose-600 font-medium">
                 <MapPin size={12} />
-                <span>Quận 1, TP.HCM</span>
+                <span>{address}</span>
               </div>
               <div className="flex items-center gap-1.5 whitespace-nowrap text-[11px] text-rose-600 font-medium border-l border-rose-200/50 pl-4">
                 <Clock size={12} />
-                <span>9:00 - 21:00</span>
+                <span>{hours}</span>
               </div>
               <div className="flex items-center gap-1.5 whitespace-nowrap text-[11px] text-rose-600 font-medium border-l border-rose-200/50 pl-4">
                 <Phone size={12} />
-                <span>090.123.4567</span>
+                <span>{phone}</span>
               </div>
             </div>
 
